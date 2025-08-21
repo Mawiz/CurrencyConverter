@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using CurrencyConverter.Business.Contracts;
 using CurrencyConverter.Business.Core;
 using CurrencyConverter.Business.Provider;
@@ -70,6 +71,16 @@ builder.Services.AddSwaggerGen(c =>
                     }
                   });
 });
+
+// Load rate limiting configuration from appsettings.json
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+
+// Add rate limiting services
+builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+builder.Services.AddInMemoryRateLimiting();
+
 builder.Services.AddControllers();
 builder.Services.AddMemoryCache();
 Log.Logger = new LoggerConfiguration()
@@ -96,6 +107,7 @@ app.UseSwaggerUI(c =>
 //{
 //    app.MapOpenApi();
 //}
+app.UseIpRateLimiting();
 
 app.UseHttpsRedirection();
 app.UseAuthentication();
